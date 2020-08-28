@@ -1,0 +1,54 @@
+version: '3.7'
+services:
+  app:
+    container_name: syspass-app
+    image: syspass/syspass:latest # Set this version tag to desired one fera
+    restart: always
+    environment:
+      - USE_SSL=yes
+
+    ##### Will listen on ports 80 and 443 of the host
+    ports:
+      - "1080:80"
+      - "443:443"
+
+    depends_on:
+      - db
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./volumes/syspass.conf:/etc/apache2/sites-available/syspass.conf
+      - syspass-config:/var/www/html/sysPass/app/config
+      # - backup:/var/www/html/sysPass/app/backup
+    #Certificados SSL
+      - ./volumes/certs/syspass.exemplo.net.crt:/etc/ssl/certs/syspass.exemplo.net.crt
+      - ./volumes/certs/syspass.exemplo.net.key:/etc/ssl/private/syspass.exemplo.net.key
+
+  db:
+    container_name: syspass-db
+    restart: always
+    image: mariadb:10.2
+    # Set a secure password for MariaDB root user
+    environment:
+      - MYSQL_ROOT_PASSWORD=syspass
+    # This ports will only be accesible internally
+    expose:
+      - "3306"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - syspass-db:/var/lib/mysql
+      - backup:/backup
+
+# Persistent volumes to be used across updates.
+volumes:
+  syspass-config:
+    driver: local-persist
+    driver_opts:
+      mountpoint: /etc/syspass/config
+  # backup:
+  #   driver: local-persist
+  #   driver_opts:
+  #     mountpoint: /backup
+  syspass-db:
+    driver: local-persist
+    driver_opts:
+      mountpoint: /mysql
