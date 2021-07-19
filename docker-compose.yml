@@ -3,7 +3,7 @@ services:
   app:
     container_name: syspass-app
     image: syspass/syspass:latest # Set this version tag to desired one fera
-    restart: always
+    restart: unless-stopped
     environment:
       - USE_SSL=yes
 
@@ -25,11 +25,11 @@ services:
 
   db:
     container_name: syspass-db
-    restart: always
+    restart: unless-stopped
     image: mariadb:10.2
     # Set a secure password for MariaDB root user
     environment:
-      - MYSQL_ROOT_PASSWORD=syspass
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_secret
     # This ports will only be accesible internally
     expose:
       - "3306"
@@ -44,11 +44,12 @@ volumes:
     driver: local-persist
     driver_opts:
       mountpoint: /etc/syspass/config
-  # backup:
-  #   driver: local-persist
-  #   driver_opts:
-  #     mountpoint: /backup
+
   syspass-db:
     driver: local-persist
     driver_opts:
       mountpoint: /mysql
+
+secrets:
+  mysql_secret:
+    file: .donot
